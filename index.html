@@ -1,0 +1,89 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Técnica N°4 - 2026</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <link href="[https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap](https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap)" rel="stylesheet">
+    <style>
+        :root { --v-et4: #1b4332; --magenta: #d946ef; --cyan: #06b6d4; }
+        body { font-family: 'Source Sans 3', sans-serif; background-color: #f0f4f2; color: #1c2b24; }
+        h1, h2, .font-oswald { font-family: 'Oswald', sans-serif; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ccc; border: 2px solid #ccc; border-radius: 15px; overflow: hidden; }
+        .day-box { background: white; min-height: 120px; padding: 10px; cursor: pointer; transition: 0.2s; position: relative; }
+        .day-box:hover { background: #f0fdf4; }
+        .day-name { background: var(--v-et4); color: white; text-align: center; padding: 10px; font-weight: bold; font-size: 0.8rem; }
+        .is-today { background: #fef3c7 !important; border: 3px solid #fbbf24; }
+        .marker-bimestre { border-bottom: 5px solid var(--magenta); }
+        .event-tag { background: var(--v-et4); color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-top: 2px; display: block; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto p-4">
+        <header class="bg-[#1b4332] p-6 rounded-2xl mb-8 border-l-[15px] border-[#d946ef] text-white shadow-xl">
+            <h1 class="text-3xl font-bold uppercase italic tracking-tighter">Agenda Técnica N°4</h1>
+            <p class="text-cyan-400 font-bold uppercase text-xs">Gestión Pedagógica Digital 2026</p>
+        </header>
+
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="cambiarMes(-1)" class="bg-[#d946ef] text-white p-3 rounded-xl font-bold">◀</button>
+            <h2 id="mesTitulo" class="text-3xl font-bold uppercase italic text-gray-800"></h2>
+            <button onclick="cambiarMes(1)" class="bg-[#d946ef] text-white p-3 rounded-xl font-bold">▶</button>
+        </div>
+
+        <div id="calendar" class="calendar-grid shadow-2xl"></div>
+    </div>
+
+    <script>
+        // --- 1. PEGA TU LINK ACÁ ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGcJdZ-MzrBZHqQvVSRmpR1mVZngMSpyaQUCi45Fe63Mg6GzrT4Z0nfHjgEOGoDKjg/exec";
+
+        let fechaNav = new Date(2026, 3, 1); // Empezamos en Abril 2026
+        let eventos = [];
+
+        // Hitos PDF Agenda Educativa
+        const hitos = { "2026-04-30": "Cierre 1° Bimestre", "2026-07-17": "Cierre 1° Cuatrimestre", "2026-10-02": "Cierre 3° Bimestre", "2026-12-03": "Cierre 4° Bimestre" };
+
+        async function cargar() {
+            try {
+                const res = await fetch(SCRIPT_URL);
+                eventos = await res.json();
+                render();
+            } catch(e) { render(); }
+        }
+
+        function render() {
+            const grid = document.getElementById('calendar');
+            const tit = document.getElementById('mesTitulo');
+            const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            
+            tit.innerText = `${meses[fechaNav.getMonth()]} ${fechaNav.getFullYear()}`;
+            grid.innerHTML = ["DOM","LUN","MAR","MIÉ","JUE","VIE","SÁB"].map(d => `<div class="day-name">${d}</div>`).join('');
+
+            const ini = new Date(fechaNav.getFullYear(), fechaNav.getMonth(), 1);
+            const fin = new Date(fechaNav.getFullYear(), fechaNav.getMonth() + 1, 0);
+
+            for(let i=0; i<ini.getDay(); i++) grid.innerHTML += `<div class="day-box bg-gray-100"></div>`;
+
+            for(let d=1; d<=fin.getDate(); d++) {
+                const fStr = `${fechaNav.getFullYear()}-${(fechaNav.getMonth()+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
+                let cls = "day-box";
+                if(hitos[fStr]) cls += " marker-bimestre";
+                
+                const evsDia = eventos.filter(e => e.fecha === fStr);
+                grid.innerHTML += `
+                    <div class="${cls}">
+                        <span class="font-bold text-lg">${d}</span>
+                        ${hitos[fStr] ? `<div class="text-[9px] text-magenta-600 font-bold uppercase">${hitos[fStr]}</div>` : ''}
+                        <div class="mt-1">${evsDia.map(e => `<span class="event-tag">${e.hora} - ${e.materia}</span>`).join('')}</div>
+                    </div>`;
+            }
+        }
+
+        function cambiarMes(n) { fechaNav.setMonth(fechaNav.getMonth() + n); render(); }
+        cargar();
+    </script>
+</body>
+</html>
